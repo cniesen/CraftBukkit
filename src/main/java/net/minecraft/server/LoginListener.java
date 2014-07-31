@@ -1,5 +1,6 @@
 package net.minecraft.server;
 
+import java.net.InetSocketAddress;
 import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Random;
@@ -63,6 +64,17 @@ public class LoginListener implements PacketLoginInListener {
         if (!this.i.isComplete()) {
             this.i = this.a(this.i);
         }
+
+        /** ---- LanLogin patch start ---- **
+         *  Change user name to their IP address so that same account can
+         *  log in multiple times from different computers.
+         */
+        InetSocketAddress socketAddress = (InetSocketAddress) this.networkManager.getSocketAddress();
+        String ip = socketAddress.getAddress().getHostAddress();
+        UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + ip).getBytes(Charsets.UTF_8));
+        c.info("LanLogin: " + this.i.getName() + " switching name to " + ip);
+        this.i = new GameProfile(uuid, ip);
+        /** ---- LanLogin patch end ---- **/
 
         // CraftBukkit start - fire PlayerLoginEvent
         EntityPlayer s = this.server.getPlayerList().attemptLogin(this, this.i, this.hostname);
